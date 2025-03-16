@@ -175,7 +175,7 @@ float const FGTranslatorUnknownConfidence = -1;
                              INT_MAX;
     [self chunkedTranslationsWithTexts:texts
                         chunkCondition:^BOOL(NSArray<NSString *> *texts, NSString *thisText) {
-                            return texts.count >= chunkLength;
+                            return texts.count < chunkLength;
                         } translate:^(NSArray<NSString *> *texts, void (^callback)(NSError *error, NSArray<NSString *> *results)) {
                             [self translateTexts:texts
                                       withSource:source
