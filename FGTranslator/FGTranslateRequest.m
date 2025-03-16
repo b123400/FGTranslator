@@ -273,4 +273,59 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
     return operation;
 }
 
+#pragma mark - DeepL
+
++ (AFHTTPRequestOperation *)deeplTranslateMessages:(NSArray <NSString*> *)messages
+                                        withSource:(NSString *)source
+                                            target:(NSString *)target
+                                            apiKey:(NSString *)apiKey
+                                        completion:(void (^)(NSArray <NSString*> *translatedMessage, NSArray <NSString*> *detectedSource, NSError *error))completion {
+
+    NSDictionary *reqBody = @{
+        @"text": messages,
+        @"target_lang": target,
+        @"source_lang": source
+    };
+
+    NSURL *requestURL = [NSURL URLWithString:@"https://api-free.deepl.com/v2/translate"];
+
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestURL];
+    [request setHTTPMethod:@"POST"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [request setValue:[NSString stringWithFormat:@"DeepL-Auth-Key %@", apiKey] forHTTPHeaderField:@"Authorization"];
+
+    NSError *error = nil;
+
+    [request setHTTPBody:[NSJSONSerialization dataWithJSONObject:reqBody
+                                                         options:0
+                                                           error:&error]];
+
+    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
+    operation.responseSerializer = [AFJSONResponseSerializer serializer];
+
+    // Microsoft doesn't like standard
+    operation.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"application/json"];
+
+    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, NSDictionary *responseObject)
+     {
+        NSLog(@"responseObject %@", responseObject);
+         NSMutableArray *translated = [NSMutableArray array];
+         NSMutableArray *sources = [NSMutableArray array];
+        for (NSDictionary *translation in responseObject[@"translations"]) {
+            NSString *translatedText = translation[@"text"];
+            [translated addObject:translatedText];
+            [sources addObject:translation[@"detected_source_language"] ?: source];
+        }
+        completion(translated, sources, nil);
+     }
+                                     failure:^(AFHTTPRequestOperation *operation, NSError *error)
+     {
+         NSError *fgError = [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:FGTranslationErrorOther userInfo:error.userInfo];
+         completion(nil, nil, fgError);
+     }];
+
+    [operation start];
+    return operation;
+}
+
 @end

@@ -81,6 +81,14 @@ typedef void (^FGTranslatorMultipleCompletionHandler)(NSError *error, NSArray <N
 - (id)initWithAzureAPIKey:(NSString *)apiKey;
 
 /**
+ * Initialize translator with DeepL Translate.
+
+ * @param apiKey DeepL API Key
+ * @return FGTranslator instance.
+ */
+- (id)initWithDeepLAPIKey:(NSString *)apiKey;
+
+/**
  * Translate text.
  
  * The translator will attempt to guess the source language, and user the current iPhone locale for the target language.

@@ -25,6 +25,7 @@ typedef enum : NSUInteger {
     FGTranslatorServiceTypeGoogle,
     FGTranslatorServiceTypeMicrosoft,
     FGTranslatorServiceTypeUnknown,
+    FGTranslatorServiceTypeDeepl,
 } FGTranslatorServiceType;
 
 float const FGTranslatorUnknownConfidence = -1;
@@ -35,6 +36,7 @@ float const FGTranslatorUnknownConfidence = -1;
 
 @property (nonatomic) NSString *googleAPIKey;
 @property (nonatomic) NSString *azureAPIKey;
+@property (nonatomic) NSString *deeplAPIKey;
 
 //@property (nonatomic) FGTranslatorState translatorState;
 
@@ -63,6 +65,17 @@ float const FGTranslatorUnknownConfidence = -1;
     if (self)
     {
         self.azureAPIKey = apiKey;
+    }
+
+    return self;
+}
+
+- (id)initWithDeepLAPIKey:(NSString *)apiKey
+{
+    self = [self initGeneric];
+    if (self)
+    {
+        self.deeplAPIKey = apiKey;
     }
 
     return self;
@@ -108,6 +121,9 @@ float const FGTranslatorUnknownConfidence = -1;
             break;
         case FGTranslatorServiceTypeMicrosoft:
             [cacheKey appendFormat:@"|Azure"];
+            break;
+        case FGTranslatorServiceTypeDeepl:
+            [cacheKey appendFormat:@"|Deepl"];
             break;
         default:
             break;
@@ -155,6 +171,7 @@ float const FGTranslatorUnknownConfidence = -1;
                    completion:(void(^)(NSError *error, NSArray<NSString*>*))completion {
     NSUInteger chunkLength = self.translationServiceType == FGTranslatorServiceTypeMicrosoft ? 25 :
                              self.translationServiceType == FGTranslatorServiceTypeGoogle ? 200 :
+                             self.translationServiceType == FGTranslatorServiceTypeDeepl ? 50 :
                              INT_MAX;
     [self chunkedTranslationsWithTexts:texts
                         chunkCondition:^BOOL(NSArray<NSString *> *texts, NSString *thisText) {
@@ -289,6 +306,17 @@ float const FGTranslatorUnknownConfidence = -1;
                                            }];
             [self.operations addObject:operation];
             }
+        case FGTranslatorServiceTypeDeepl: {
+            __block AFHTTPRequestOperation *operation = [FGTranslateRequest deeplTranslateMessages:textsToTranslate
+                                           withSource:source
+                                               target:target
+                                               apiKey:self.deeplAPIKey
+                                           completion:^(NSArray<NSString *> *translatedMessages, NSArray<NSString *> *detectedSource, NSError *error) {
+                                               translateCompletion(translatedMessages, detectedSource, error);
+                                               [self.operations removeObject:operation];
+                                           }];
+            [self.operations addObject:operation];
+        }
             break;
         default: {
             NSError *error = [self errorWithCode:FGTranslatorErrorMissingCredentials
@@ -335,6 +363,8 @@ float const FGTranslatorUnknownConfidence = -1;
         return FGTranslatorServiceTypeGoogle;
     } else if (self.azureAPIKey.length) {
         return FGTranslatorServiceTypeMicrosoft;
+    } else if (self.deeplAPIKey.length) {
+        return FGTranslatorServiceTypeDeepl;
     }
     return FGTranslatorServiceTypeUnknown;
 }

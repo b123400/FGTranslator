@@ -54,4 +54,12 @@ enum
                                            apiKey:(NSString *)apiKey
                                        completion:(void (^)(NSArray <NSString*> *translatedMessage, NSArray <NSString*> *detectedSource, NSError *error))completion;
 
+#pragma mark - DeepL
+
++ (AFHTTPRequestOperation *)deeplTranslateMessages:(NSArray <NSString*> *)messages
+                                        withSource:(NSString *)source
+                                            target:(NSString *)target
+                                            apiKey:(NSString *)apiKey
+                                       completion:(void (^)(NSArray <NSString*> *translatedMessage, NSArray <NSString*> *detectedSource, NSError *error))completion;
+
 @end
