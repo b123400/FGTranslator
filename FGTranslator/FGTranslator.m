@@ -195,7 +195,7 @@ float const FGTranslatorUnknownConfidence = -1;
         completion(nil, nil, nil);
         return;
     }
-    
+
     // TODO: Make this class support multiple operation at the same time
 
     if (self.translationServiceType == FGTranslatorServiceTypeUnknown)
@@ -306,6 +306,7 @@ float const FGTranslatorUnknownConfidence = -1;
                                            }];
             [self.operations addObject:operation];
             }
+            break;
         case FGTranslatorServiceTypeDeepl: {
             __block AFHTTPRequestOperation *operation = [FGTranslateRequest deeplTranslateMessages:textsToTranslate
                                            withSource:source
